@@ -40,6 +40,11 @@
 (defvar er/history '()
   "A history of start and end points so we can contract after expanding.")
 
+(defvar er/before-start nil
+  "Start point when first er/expand-region")
+(defvar er/before-end nil
+  "End point when first er/expand-region")
+
 ;; history is always local to a single buffer
 (make-variable-buffer-local 'er/history)
 
@@ -241,8 +246,8 @@ period and marks next symbol."
   "Mark pairs (as defined by the mode), including the pair chars."
   (interactive)
   (if (looking-back "\\s)+\\=")
-        (ignore-errors (backward-list 1))
-      (skip-chars-forward er--space-str))
+      (ignore-errors (backward-list 1))
+    (skip-chars-forward er--space-str))
   (when (and (er--point-inside-pairs-p)
              (or (not (er--looking-at-pair))
                  (er--looking-at-marked-pair)))
@@ -302,7 +307,9 @@ before calling `er/expand-region' for the first time."
              (try-list er/try-expand-list)
              (best-start 1)
              (best-end (buffer-end 1))
-             (set-mark-default-inactive nil))
+             (set-mark-default-inactive nil)
+             (longest-start 0)
+             (longest-end 0))
 
         ;; add hook to clear history on buffer changes
         (unless er/history
@@ -319,17 +326,26 @@ before calling `er/expand-region' for the first time."
           (skip-chars-forward er--space-str)
           (setq start (point)))
 
+        (unless (eq last-command this-command)
+          (setq er/before-start start)
+          (setq er/before-end end))
+
         (while try-list
           (save-excursion
+            (goto-char er/before-start)
+            (set-mark er/before-end)
             (ignore-errors
               (funcall (car try-list))
+              (when (> (- (mark) (point)) (- longest-end longest-start))
+                (setq longest-start (point))
+                (setq longest-end (mark)))
               (when (and (region-active-p)
-                         (<= (point) start)
-                         (>= (mark) end)
+                         (or (<= (point) start)
+                             (>= (mark) end))
                          (> (- (mark) (point)) (- end start))
-                         (or (> (point) best-start)
-                             (and (= (point) best-start)
-                                  (< (mark) best-end))))
+                         (or (< (- (mark) (point)) (- best-end best-start))
+                             (and (= (- (mark) (point)) (- best-end best-start))
+                                  (not (= (point) best-start)))))
                 (setq best-start (point))
                 (setq best-end (mark))
                 (unless (minibufferp)
@@ -338,6 +354,11 @@ before calling `er/expand-region' for the first time."
 
         (goto-char best-start)
         (set-mark best-end)
+
+        (when (and (= best-start longest-start)
+                   (= best-end longest-end))
+          (setq er/before-start best-start)
+          (setq er/before-end best-end))
 
         (when (and (= best-start 0)
                    (= best-end (buffer-end 1))) ;; We didn't find anything new, so exit early
