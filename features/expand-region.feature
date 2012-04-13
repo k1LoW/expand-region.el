@@ -222,15 +222,62 @@ Feature: Expand Region
     And I press "C-@"
     Then the region should be "(is some)"
 
-  Scenario: Add er/mark-whole-line
+  Scenario: Use er/mark-word, Because region length is most shortest
     Given there is no region selected
+    Given er/try-expand-list by default
     When I add er/mark-whole-line to er/try-expand-list
     When I insert:
     """
-    This is
-       some text
+    This (is (some)
+    text) and more
+    """
+    And I go to point "13"
+    And I press "C-@"
+    Then the region should be "some"
+    Then the region length "4"
+
+  Scenario: Use er/mark-outside-pairs, Because region length is 2nd most shortest
+    Given there is no region selected
+    Given er/try-expand-list by default
+    When I add er/mark-whole-line to er/try-expand-list
+    When I insert:
+    """
+    This (is (some)
+    text) and more
     """
     And I go to point "13"
     And I press "C-@"
     And I press "C-@"
-    Then the region should be "some text"
+    Then the region should be "(some)"
+    Then the region length "6"
+
+  Scenario: Use er/mark-inside-pairs, Because region length is 3rd most shortest
+    Given there is no region selected
+    Given er/try-expand-list by default
+    When I add er/mark-whole-line to er/try-expand-list
+    When I insert:
+    """
+    This (is (some)
+    text) and more
+    """
+    And I go to point "13"
+    And I press "C-@"
+    And I press "C-@"
+    And I press "C-@"
+    Then the region length "14"
+
+  Scenario: Use er/mark-whole-line, Because region length is 4th most shortest
+    Given there is no region selected
+    Given er/try-expand-list by default
+    When I add er/mark-whole-line to er/try-expand-list
+    When I insert:
+    """
+    This (is (some)
+    text) and more
+    """
+    And I go to point "13"
+    And I press "C-@"
+    And I press "C-@"
+    And I press "C-@"
+    And I press "C-@"
+    Then the region length "15"

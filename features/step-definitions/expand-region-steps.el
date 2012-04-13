@@ -2,15 +2,29 @@
        (lambda ()
          (setq set-mark-default-inactive t)))
 
+(Given "^er/try-expand-list by default$"
+       (lambda ()
+         (setq er/try-expand-list '(er/mark-word
+                                    er/mark-symbol
+                                    er/mark-symbol-with-prefix
+                                    er/mark-next-accessor
+                                    er/mark-method-call
+                                    er/mark-comment
+                                    er/mark-comment-block
+                                    er/mark-inside-quotes
+                                    er/mark-outside-quotes
+                                    er/mark-inside-pairs
+                                    er/mark-outside-pairs))))
+
 (When "^I expand the region$"
       (lambda ()
         (flet ((message (&rest args) nil))
           (er/expand-region 1))))
 
 (When "^I quit$"
-     (lambda ()
-       (flet ((signal (&rest args) nil))
-         (keyboard-quit))))
+      (lambda ()
+        (flet ((signal (&rest args) nil))
+          (keyboard-quit))))
 
 (When "^I expand the region \\([0-9]+\\) times$"
       (lambda (arg)
@@ -48,3 +62,10 @@
 (When "^I add \\(.+\\) to er/try-expand-list"
       (lambda (arg)
         (add-to-list 'er/try-expand-list (intern-soft arg))))
+
+(Then "^the region length \"\\(.+\\)\"$"
+      (lambda (arg)
+        (should
+         (=
+          (string-to-number arg)
+          (- (region-end) (region-beginning))))))
