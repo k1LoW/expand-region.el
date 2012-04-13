@@ -257,6 +257,14 @@ period and marks next symbol."
     (forward-list)
     (exchange-point-and-mark)))
 
+;; Line
+(defun er/mark-whole-line ()
+  (interactive)
+    (set-mark (save-excursion
+                (end-of-line)
+                (point)))
+      (back-to-indentation))
+
 ;; Methods to try expanding to
 
 (setq er/try-expand-list '(er/mark-word

@@ -44,3 +44,7 @@
          (=
           (string-to-number arg)
           (point)))))
+
+(When "^I add \\(.+\\) to er/try-expand-list"
+      (lambda (arg)
+        (add-to-list 'er/try-expand-list (intern-soft arg))))

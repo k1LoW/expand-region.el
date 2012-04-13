@@ -221,3 +221,16 @@ Feature: Expand Region
     And I go to point "6"
     And I press "C-@"
     Then the region should be "(is some)"
+
+  Scenario: Add er/mark-whole-line
+    Given there is no region selected
+    When I add er/mark-whole-line to er/try-expand-list
+    When I insert:
+    """
+    This is
+       some text
+    """
+    And I go to point "13"
+    And I press "C-@"
+    And I press "C-@"
+    Then the region should be "some text"
